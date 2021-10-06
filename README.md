@@ -10,7 +10,7 @@ In detail, ac2imp will convert manual enter or manual changed of a transaction l
 or bank export like Checking3.csv:
 ```
 Checking Account,Date,Co./Last Name,First Name,Memo,Allocation Account #,Amount,Exchange Rate
-11112, 03/06/2021,  Yang Jiuxia, Jiuxia Salary in Feburary 2021, 61114  , RMB1200.00, 0.156006
+11112, 03/06/2021,Carwell,Lydia,Lydia Salary in Feburary 2021, 61114  , RMB1200.00, 0.156006
 # The following transaction is commented, and will not be loaded. 
 #11104,7/13/21,Wells Fargo Bank,,ONLINE TRANSFER TO Jim,11105,-1000,,1
 11104,6/8/21,,,ZELLE TO LAURA ON 06/08 REF #PP0BNM5326,61105,-500,1
@@ -22,8 +22,8 @@ into file format that importable to AccountEdge
 it creats Spend list file Checking3_spend.txt:
 ```
 Checking Account,Date,Co./Last Name,First Name, Memo,Allocation Account #,Amount,Currency Code, Exchange Rate
-11112, 03/06/2021,  Yang Jiuxia, Jiuxia Salary in Feburary 2021,, RMB1200.00,RMB, 0.156006
-11112, 03/06/2021,, Jiuxia Salary in Feburary 2021, 61114, RMB1200.00,RMB, 0.156006
+11112, 03/06/2021,Carwell,Lydia, Lydia Salary in Feburary 2021,, RMB1200.00,RMB, 0.156006
+11112, 03/06/2021,,,Lydia Salary in Feburary 2021, 61114, RMB1200.00,RMB, 0.156006
 
 11104,6/8/21,,,ZELLE TO LAURA ON 06/08 REF #PP0BNM5326,61105, -500.0,USD, 1
 11104,6/8/21,,,ZELLE TO LAURA ON 06/08 REF #PP0BNM5326,61105, -500.0,USD, 1
