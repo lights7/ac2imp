@@ -21,6 +21,9 @@ def export (path_receive, path_spend, mapping, grid):
 #    amount_sign=list(filter(lambda x: 'Amount' in x,grid.grid_contents[0])) 
     out_spend.write('Checking Account,Date,Co./Last Name,First Name, Memo,Allocation Account #,Amount,Currency Code, Exchange Rate')
     out_receive.write('Deposit Account,Date,Co./Last Name,First Name,Memo,Allocation Account #,Amount,Currency Code,Exchange Rate,Payment Method,Check Number,Notes')
+    if list(filter(lambda x: 'Account' in x,grid.grid_contents[0])) == []: 
+        print("Error, first row need to be collum title")
+        return 20
     if account_type!= []:
         type_tran = "Spend"
     elif list(filter(lambda x: 'Deposit Account' in x,grid.grid_contents[0])) != []:
@@ -55,7 +58,7 @@ def export (path_receive, path_spend, mapping, grid):
                data['Amount']=float(data['Amount'].replace("RMB","").replace("$","").replace("USD","")) 
 #               if data['Amount'] < 0:
                toacc=data['ToAcc'].replace(" ","") 
-               if toacc != "" and toacc == '4': #Spend in Receive
+               if toacc != "" and toacc[0] != '4': #Spend in Receive
                    tran = "Spend in Receive"
 #                   data['Amount']=0.000-data['Amount']
                else:
@@ -195,7 +198,7 @@ def credit_export (path_receive, path_spend, mapping, grid):
                if first_acc.replace(" ","") == "" or toacc=="":
                    print("Account information cannot be empty for Credit transaction")
                    print(data)
-                   exit(15)
+                   return 15
                if data['Credit'].replace(" ","") != "" and toacc[0] == "6" : #Credit
                    tran = "Spend in Spend"
                    first_acc=grid.GetValue(row,0).strip()
@@ -223,24 +226,6 @@ def credit_export (path_receive, path_spend, mapping, grid):
                    data['ToAcc']= first_acc
                    data['Amount']=abs(float(data['Debit'].replace("RMB","").replace("$","").replace("USD","")))
 
-#               elif data['Credit'].replace(" ","") != "" and toacc[0] != '6': #Credit
-#               else:
-#                   tran = "Spend in Spend"
-#                   first_acc=grid.GetValue(row,0).strip()
-#                   data['FromAcc']=first_acc
-#                   data['Amount']=float(data['Debit'].replace("RMB","").replace("$","").replace("USD","")) 
-
-
-#               toacc=data['ToAcc'].replace(" ","") 
-#               if toacc != "" and toacc == '4': #Receive in Spend
-#                   tran = "Receive in Spend"
-##                   data['Amount']=data['Amount']
-#                   data['PayMethod']="Online Transfer"
-##                   paymethod=grid.grid_contents(row)(8)
-#                   data['CheckN']=""
-#                   data['Notes']=data['CheckN'] # for Receive
-#               else:
-#                   tran = "Spend in Spend"
            elif type_tran == "Receive":
                data=dict([(k,mapping[k](row,grid)) for k in
                    ['Date','lname','fname', 'Memo','ToAcc','Debit','Credit', 'ExRate', 'PayMethod','CheckN']])
@@ -259,7 +244,7 @@ def credit_export (path_receive, path_spend, mapping, grid):
                    data['FromAcc']=first_acc
                    data['Amount']=float(data['Debit'].replace("RMB","").replace("$","").replace("USD","")) 
                toacc=data['ToAcc'].replace(" ","") 
-               if toacc != "" and toacc == '4': #Spend in Receive
+               if toacc != "" and toacc != '4': #Spend in Receive
                    tran = "Spend in Receive"
 #                   data['Amount']=0.000-data['Amount']
                else:
