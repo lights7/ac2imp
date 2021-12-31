@@ -227,6 +227,13 @@ class ac2imp(wx.App):
                "No File exported.",
                wx.OK|wx.ICON_INFORMATION
            ).ShowModal()
+        elif result == 20:
+           wx.MessageDialog (
+               self.frame,
+               "Error, first row need to be collum title",
+               "No File exported.",
+               wx.OK|wx.ICON_INFORMATION
+           ).ShowModal()
         elif result == 1:
            wx.MessageDialog (
                self.frame,
