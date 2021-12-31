@@ -33,11 +33,16 @@ def export (path_receive, path_spend, mapping, grid):
     for row in range(grid.GetNumberRows()):
         if row > 0 :
 #           if type_tran == "Spend" and float(mapping['Amount'](row,grid).replace("RMB","").replace("$","").replace("USD","")) > 0:
+           date=grid.GetValue(row,1).strip()
+           temp = date.split("/") 
+           if int(temp[0]) >12:
+               date=temp[1]+'/'+temp[2]+'/'+temp[0]
            if type_tran == "Spend":
                data=dict([(k,mapping[k](row,grid)) for k in ['Date','lname','fname', 'Memo','ToAcc','Amount', 'ExRate']])
                data['FromAcc']=grid.GetValue(row,0).strip()
                data['Amount']=float(data['Amount'].replace("RMB","").replace("$","").replace("USD","")) 
                toacc=data['ToAcc'].replace(" ","") 
+               data['Date']=date
                if toacc != "" and toacc[0] == '4': #Receive in Spend
                    tran = "Receive in Spend"
 #                   data['Amount']=data['Amount']
@@ -58,6 +63,7 @@ def export (path_receive, path_spend, mapping, grid):
                data['Amount']=float(data['Amount'].replace("RMB","").replace("$","").replace("USD","")) 
 #               if data['Amount'] < 0:
                toacc=data['ToAcc'].replace(" ","") 
+               data['Date']=date
                if toacc != "" and toacc[0] != '4': #Spend in Receive
                    tran = "Spend in Receive"
 #                   data['Amount']=0.000-data['Amount']
