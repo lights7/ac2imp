@@ -13,6 +13,7 @@ def export (path_receive, path_spend, mapping, grid):
     type_tran = "Empty"
     from_or_to="from"
     left=0.00
+    firstname0=""
     data={}
     depo={}
     out_receive=open(path_receive,'w')
@@ -33,132 +34,155 @@ def export (path_receive, path_spend, mapping, grid):
     for row in range(grid.GetNumberRows()):
         if row > 0 :
 #           if type_tran == "Spend" and float(mapping['Amount'](row,grid).replace("RMB","").replace("$","").replace("USD","")) > 0:
-           date=grid.GetValue(row,1).strip()
-           temp = date.split("/") 
-           if int(temp[0]) >12:
-               date=temp[1]+'/'+temp[2]+'/'+temp[0]
-           if type_tran == "Spend":
-               data=dict([(k,mapping[k](row,grid)) for k in ['Date','lname','fname', 'Memo','ToAcc','Amount', 'ExRate']])
-               data['FromAcc']=grid.GetValue(row,0).strip()
-               data['Amount']=float(data['Amount'].replace("RMB","").replace("$","").replace("USD","")) 
-               toacc=data['ToAcc'].replace(" ","") 
-               data['Date']=date
-               if toacc != "" and toacc[0] == '4': #Receive in Spend
-                   tran = "Receive in Spend"
-#                   data['Amount']=data['Amount']
-                   data['PayMethod']="Online Transfer"
-#                   paymethod=grid.grid_contents(row)(8)
-                   data['CheckN']=""
-                   data['Notes']=data['CheckN'] # for Receive
-               else:
-                   tran = "Spend in Spend"
-                   if data['Amount'] < 0 and toacc[0] !='6' :
-                      data['ToAcc'] = data['FromAcc']
-                      data['FromAcc'] = toacc
-                      data['Amount'] = 0.0 - data['Amount']
-           elif type_tran == "Receive":
-               data=dict([(k,mapping[k](row,grid)) for k in ['Date','lname','fname', 'Memo','ToAcc','Amount', 'ExRate', 'PayMethod','CheckN']])
-               data['FromAcc']=grid.GetValue(row,0).strip()
-               data['Notes']=data['CheckN'] # for Receive
-               data['Amount']=float(data['Amount'].replace("RMB","").replace("$","").replace("USD","")) 
-#               if data['Amount'] < 0:
-               toacc=data['ToAcc'].replace(" ","") 
-               data['Date']=date
-               if toacc != "" and toacc[0] != '4': #Spend in Receive
-                   tran = "Spend in Receive"
+            date=grid.GetValue(row,1).strip()
+            temp = date.split("/") 
+            if int(temp[0]) >12:
+                date=temp[1]+'/'+temp[2]+'/'+temp[0]
+            if type_tran == "Spend":
+                data=dict([(k,mapping[k](row,grid)) for k in ['Date','lname','fname', 'Memo','ToAcc','Amount', 'ExRate']])
+                data['FromAcc']=grid.GetValue(row,0).strip()
+                data['Amount']=float(data['Amount'].replace("RMB","").replace("$","").replace("USD","")) 
+                toacc=data['ToAcc'].replace(" ","") 
+                data['Date']=date
+                if toacc != "" and toacc[0] == '4': #Receive in Spend
+                    tran = "Receive in Spend"
+#                    data['Amount']=data['Amount']
+                    data['PayMethod']="Online Transfer"
+#                    paymethod=grid.grid_contents(row)(8)
+                    data['CheckN']=""
+                    data['Notes']=data['CheckN'] # for Receive
+                else:
+                    tran = "Spend in Spend"
+                    if data['Amount'] < 0 and toacc[0] !='6' :
+                       data['ToAcc'] = data['FromAcc']
+                       data['FromAcc'] = toacc
+                       data['Amount'] = 0.0 - data['Amount']
+            elif type_tran == "Receive":
+                data=dict([(k,mapping[k](row,grid)) for k in ['Date','lname','fname', 'Memo','ToAcc','Amount', 'ExRate', 'PayMethod','CheckN']])
+                data['FromAcc']=grid.GetValue(row,0).strip()
+                data['Notes']=data['CheckN'] # for Receive
+                data['Amount']=float(data['Amount'].replace("RMB","").replace("$","").replace("USD","")) 
+#                if data['Amount'] < 0:
+                toacc=data['ToAcc'].replace(" ","") 
+#                if toacc.find("41100")>0:
+                if "41100" in toacc:
+                    towho="to Zhao"
+                elif "41111" in toacc:
+                    towho="to Shakdor"
+                else:
+                    towho="to T"
+                if len(data['lname']) > 27:
+                    lastname=data['lname'].split()
+                    abbr=""
+                    for name in lastname:
+                        if name.find("Inc") < 0:
+                           abbr=abbr+name[0]
+#                    data['lname']=abbr
+#                data['Memo']="%s" % mapping['lname'](row,grid) + towho
+                else:
+                    abbr=mapping['lname'](row,grid) 
+                firstname=data['fname']
+                lastname=data['lname'].split()
+                if len(firstname)>0 and len(lastname)==1 :
+                    firstname0 = firstname[0]
+                else:
+                    firstname0 = ""
+                data['Memo']="%s" % abbr + ' ' + firstname0 + ' ' + towho
+                data['Date']=date
+                if toacc != "" and toacc[0] != '4': #Spend in Receive
+                    tran = "Spend in Receive"
 #                   data['Amount']=0.000-data['Amount']
-               else:
-                   tran = "Receive in Receive"
+                else:
+                    tran = "Receive in Receive"
 
-           data['lname']=data['lname'].strip() #remove space
-           data['fname']=data['fname'].strip() #remove space
-           data['Memo']=re.sub(' +',' ',"".join(re.findall("[^\u05C0-\u2100\u214F-\uFFFF]+", data['Memo']))) # remove Chinese characters
+            data['lname']=data['lname'].strip() #remove space
+            data['fname']=data['fname'].strip() #remove space
+            data['Memo']=re.sub(' +',' ',"".join(re.findall("[^\u05C0-\u2100\u214F-\uFFFF]+", data['Memo']))) # remove Chinese characters
 # preprocess for Receive money
-           if data['Memo'].replace(" ","") == "": # if no meno use first and last name as memo
-               data['Memo']="%s %s" % (mapping['lname'](row,grid), mapping['fname'](row,grid))
-           if float(data['ExRate']) < 1: 
-               data['Currency']= "RMB"
-               depo['Currency']= "RMB"
-           elif float(data['ExRate']) == 1:  
-               data['Currency']= "USD"
-               depo['Currency']= "USD"
-#           if type_tran == "Spend" and ['Amount'](row,grid).replace("RMB","").replace("$","").replace("USD","")) > 0:
-           if data['FromAcc'].replace(' ','')!= "":# new transaction and data
-              from_or_to="from"
-              if left != 0.0 :
-                  print(data)
-                  print(depo)
-                  print("warning, the balance is not zero")
-#              left=float(data['Amount'].replace("RMB","").replace("$","").replace("USD",""))
-#              left=data['Amount']
-              depo=data.copy()
-              spent=depo['Amount']
-              if tran == "Spend in Spend" or tran == "Spend in Receive" : # Transaction is spend
-                  out_spend.write (
-                 """
+#           if data['Memo'].replace(" ","") == "": # if no meno use first and last name as memo
+            if float(data['ExRate']) < 1: 
+                data['Currency']= "RMB"
+                depo['Currency']= "RMB"
+            elif float(data['ExRate']) == 1:  
+                data['Currency']= "USD"
+                depo['Currency']= "USD"
+ #           if type_tran == "Spend" and ['Amount'](row,grid).replace("RMB","").replace("$","").replace("USD","")) > 0:
+            if data['FromAcc'].replace(' ','')!= "":# new transaction and data
+                from_or_to="from"
+                if left != 0.0 :
+                    print(data)
+                    print(depo)
+                    print("warning, the balance is not zero")
+ #              left=float(data['Amount'].replace("RMB","").replace("$","").replace("USD",""))
+ #              left=data['Amount']
+                depo=data.copy()
+                spent=depo['Amount']
+                if tran == "Spend in Spend" or tran == "Spend in Receive" : # Transaction is spend
+                    out_spend.write (
+                   """
 %(FromAcc)s,%(Date)s,%(lname)s,%(fname)s,%(Memo)s,%(ToAcc)s, %(Amount)s,%(Currency)s, %(ExRate)s""" %data)
 # if From followed by a To, don't write To here, wait next line
 #                  if row<grid.grid_rows-1 and grid.grid_content(row+1,0).replace(' ','') != "": #if followed a new transaction then write out the current Credit transaction 
-                  if row<grid.grid_rows-1 and grid.grid_contents[row+1][0].replace(' ','') != "": #if followed a new transaction then write out the current Credit transaction 
-                     left=left-left
-                     out_spend.write (
-               """
+                    if row<grid.grid_rows-1 and grid.grid_contents[row+1][0].replace(' ','') != "": #if followed a new transaction then write out the current Credit transaction 
+                       left=left-left
+                       out_spend.write (
+                 """
 %(FromAcc)s,%(Date)s,%(lname)s,%(fname)s,%(Memo)s,%(ToAcc)s, %(Amount)s,%(Currency)s, %(ExRate)s
-               """ %depo)
-                  elif row==grid.grid_rows-1:# write for last line
-                     left=left-spent
-                     out_spend.write (
-               """
+                 """ %depo)
+                    elif row==grid.grid_rows-1:# write for last line
+                       left=left-spent
+                       out_spend.write (
+                 """
 %(FromAcc)s,%(Date)s,%(lname)s,%(fname)s,%(Memo)s,%(ToAcc)s, %(Amount)s,%(Currency)s, %(ExRate)s
-               """ %depo)
-              elif tran == "Receive in Receive" or tran == "Receive in Spend" : # Transaction is Receive or Receive in Spend
-                  out_receive.write (
+                 """ %depo)
+                elif tran == "Receive in Receive" or tran == "Receive in Spend" : # Transaction is Receive or Receive in Spend
+                    out_receive.write (
                  """
 %(FromAcc)s,%(Date)s,%(lname)s,%(fname)s,%(Memo)s,%(ToAcc)s, %(Amount)s,%(Currency)s, %(ExRate)s,%(PayMethod)s,%(CheckN)s,%(Notes)s """ %data)
 # if From followed by a To, don't write To here, wait next line
 #                  if row<grid.grid_rows-1 and mapping['FromAcc'](row+1,grid).replace(' ','') != "": #if followed a new transaction then write out the current Credit transaction 
-                  if row<grid.grid_rows-1 and grid.grid_contents[row+1][0].replace(' ','') != "": #if followed a new transaction then write out the current Credit transaction 
-                     left=left-left
-                     out_receive.write (
-               """
+                    if row<grid.grid_rows-1 and grid.grid_contents[row+1][0].replace(' ','') != "": #if followed a new transaction then write out the current Credit transaction 
+                       left=left-left
+                       out_receive.write (
+                 """
 %(FromAcc)s,%(Date)s,%(lname)s,%(fname)s,%(Memo)s,%(ToAcc)s, %(Amount)s,%(Currency)s, %(ExRate)s,%(PayMethod)s,%(CheckN)s,%(Notes)s 
-               """ %depo)
-                  elif row==grid.grid_rows-1:# write for last line
-                     left=left-spent
-                     out_receive.write (
-               """
+                 """ %depo)
+                    elif row==grid.grid_rows-1:# write for last line
+                       left=left-spent
+                       out_receive.write (
+                 """
 %(FromAcc)s,%(Date)s,%(lname)s,%(fname)s,%(Memo)s,%(ToAcc)s, %(Amount)s,%(Currency)s, %(ExRate)s,%(PayMethod)s,%(CheckN)s,%(Notes)s 
-               """ %depo)
+                 """ %depo)
 
-           else: 
+            else: 
 
-               from_or_to="to"
-               depo=data.copy()    
-               data['ToAcc']= "" 
-               depo['Co./Last Name']= "" 
-               depo['First Name']= "" 
-               depo['FromAcc']= "" 
-               spent=depo['Amount']
-#               spent=float(depo['Amount'].replace("RMB","").replace("$","").replace("USD",""))
-               left=left-spent
-
-               if type_tran == "Spend" or tran == "Spend in Receive" : # Transaction is spend but in Receive file
-
-                  out_spend.write (
-                   """
+                from_or_to="to"
+                depo=data.copy()    
+                data['ToAcc']= "" 
+                depo['Co./Last Name']= "" 
+                depo['First Name']= "" 
+                depo['FromAcc']= "" 
+                spent=depo['Amount']
+ #               spent=float(depo['Amount'].replace("RMB","").replace("$","").replace("USD",""))
+                left=left-spent
+ 
+                if type_tran == "Spend" or tran == "Spend in Receive" : # Transaction is spend but in Receive file
+ 
+                   out_spend.write (
+                    """
 %(FromAcc)s,%(Date)s,%(lname)s,%(fname)s,%(Memo)s,%(ToAcc)s, %(Amount)s,%(Currency)s, %(ExRate)s """ %depo)
-                  if row<grid.grid_rows-1 and grid.grid_contents[row+1][0].replace(' ','') != "": #if followed a new transaction then write out the current Credit transaction 
-#                  if row<grid.grid_rows-1 and mapping['FromAcc'](row+1,grid).replace(' ','') != "":
-                     out_spend.write ("\n")
+                   if row<grid.grid_rows-1 and grid.grid_contents[row+1][0].replace(' ','') != "": #if followed a new transaction then write out the current Credit transaction 
+ #                  if row<grid.grid_rows-1 and mapping['FromAcc'](row+1,grid).replace(' ','') != "":
+                      out_spend.write ("\n")
 
-               else: # Transaction is Receive
+                else: # Transaction is Receive
 
-                  out_receive.write (
-                   """
+                   out_receive.write (
+                    """
 %(FromAcc)s,%(Date)s,%(lname)s,%(fname)s,%(Memo)s,%(ToAcc)s, %(Amount)s,%(Currency)s, %(ExRate)s,%(PayMethod)s,%(CheckN)s,%(Notes)s  """ %depo)
-                  if row<grid.grid_rows-1 and grid.grid_contents[row+1][0].replace(' ','') != "": #if followed a new transaction then write out the current Credit transaction 
-#                  if row<grid.grid_rows-1 and mapping['FromAcc'](row+1,grid).replace(' ','') != "":
-                     out_receive.write ("\n")
+                   if row<grid.grid_rows-1 and grid.grid_contents[row+1][0].replace(' ','') != "": #if followed a new transaction then write out the current Credit transaction 
+ #                  if row<grid.grid_rows-1 and mapping['FromAcc'](row+1,grid).replace(' ','') != "":
+                      out_receive.write ("\n")
 
     out_receive.close()
     out_spend.close()
@@ -261,7 +285,7 @@ def credit_export (path_receive, path_spend, mapping, grid):
            data['Memo']=re.sub(' +',' ',"".join(re.findall("[^\u05C0-\u2100\u214F-\uFFFF]+", data['Memo']))) # remove Chinese characters
 # preprocess for Receive money
            if data['Memo'].replace(" ","") == "": # if no meno use first and last name as memo
-               data['Memo']="%s %s" % (mapping['lname'](row,grid), mapping['fname'](row,grid))
+               data['Memo']="%s" % mapping['lname'](row,grid)
            if float(data['ExRate']) < 1: 
                data['Currency']= "RMB"
                depo['Currency']= "RMB"
